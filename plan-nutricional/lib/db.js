@@ -1,18 +1,25 @@
-// lib/db.js
-import mysql from 'mysql2/promise';
+import mysql from "mysql2/promise";
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,       // Ej: mysql-xxxxx.aivencloud.com
-  port: process.env.DB_PORT || 3306,
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,   // Ej: defaultdb o plan_nutricional
+  database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,             // Límite conservador para Vercel [citation:6]
+  connectionLimit: 5,
   queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: false      // Necesario para Aiven si usas SSL
-  }
+  connectTimeout: 10000,
+  ssl: process.env.DB_SSL_CA
+    ? {
+        ca: process.env.DB_SSL_CA,
+        rejectUnauthorized: true,
+      }
+    : {
+        // Compatibilidad con proveedores administrados que requieren TLS
+        // pero no entregan una CA para configurar en la aplicación.
+        rejectUnauthorized: false,
+      },
 });
 
 export default pool;
